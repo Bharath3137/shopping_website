@@ -10,39 +10,40 @@ class CartManager:
         if not self.productmanager.is_valid_product(product_id):
             return "Invalid Product ID"
 
-        query = f"""
+        query = """
         SELECT * FROM cart
-        WHERE user_id={self.user_id}
-        AND product_id={product_id}
+        WHERE user_id=%s
+        AND product_id=%s
         """
 
-        cart_item = self.databasemanager.execute_query(query)
+        cart_item = self.databasemanager.execute_query(query,(self.user_id,product_id))
 
         if cart_item:
 
             quantity = cart_item[0]["quantity"] + 1
 
-            query = f"""
+            query = """
             UPDATE cart
-            SET quantity={quantity}
-            WHERE user_id={self.user_id}
-            AND product_id={product_id}
+            SET quantity=%s
+            WHERE user_id=%s
+            AND product_id=%s
             """
+            self.databasemanager.execute_query(query,(quantity,self.user_id,product_id))
 
         else:
 
-            query = f"""
+            query = """
             INSERT INTO cart(user_id, product_id, quantity)
-            VALUES({self.user_id}, {product_id}, 1)
+            VALUES(%s,%s,%s)
             """
 
-        self.databasemanager.execute_query(query)
+            self.databasemanager.execute_query(query,(self.user_id,product_id,1))
 
         return "Product Added Successfully"
 
     def view_cart(self):
 
-        query = f"""
+        query = """
         SELECT
             products.name,
             products.price,
@@ -50,10 +51,10 @@ class CartManager:
         FROM cart
         JOIN products
         ON cart.product_id = products.id
-        WHERE cart.user_id={self.user_id}
+        WHERE cart.user_id=%s
         """
 
-        items = self.databasemanager.execute_query(query)
+        items = self.databasemanager.execute_query(query,(self.user_id,))
 
         if not items:
             print("Cart is Empty")
@@ -76,13 +77,13 @@ class CartManager:
 
     def remove_item_from_cart(self, product_id):
 
-        query = f"""
+        query = """
         SELECT * FROM cart
-        WHERE user_id={self.user_id}
-        AND product_id={product_id}
+        WHERE user_id=%s
+        AND product_id=%s
         """
 
-        item = self.databasemanager.execute_query(query)
+        item = self.databasemanager.execute_query(query,(self.user_id,product_id))
 
         if not item:
             return "Product Not Found In Cart"
@@ -91,28 +92,31 @@ class CartManager:
 
         if quantity > 1:
 
-            query = f"""
+            query = """
             UPDATE cart
-            SET quantity={quantity-1}
-            WHERE user_id={self.user_id}
-            AND product_id={product_id}
+            SET quantity=%s
+            WHERE user_id=%s
+            AND product_id=%s
             """
-
+            self.databasemanager.execute_query(query,(quantity-1,self.user_id,product_id))
         else:
 
-            query = f"""
+            query = """
             DELETE FROM cart
-            WHERE user_id={self.user_id}
-            AND product_id={product_id}
+            WHERE user_id=%s
+            AND product_id=%s
             """
 
-        self.databasemanager.execute_query(query)
+        self.databasemanager.execute_query(query,(self.user_id,product_id))
 
         return "Removed Successfully"
 
     def checkout(self):
+      try:
 
-       query = f"""
+       self.databasemanager.begin_transaction()
+
+       query = """
        SELECT
         cart.product_id,
         cart.quantity,
@@ -121,10 +125,10 @@ class CartManager:
        FROM cart
        JOIN products
        ON cart.product_id = products.id
-       WHERE cart.user_id = {self.user_id}
+       WHERE cart.user_id = %s
        """
 
-       cart_items = self.databasemanager.execute_query(query)
+       cart_items = self.databasemanager.execute_query(query,(self.user_id,))
 
        if not cart_items:
           return "Cart is Empty"
@@ -138,40 +142,42 @@ class CartManager:
 
           total_amount += item["price"] * item["quantity"]
 
-       query = f"""
+       query = """
        INSERT INTO orders(user_id, total_amount)
-       VALUES({self.user_id}, {total_amount})
+       VALUES(%s, %s)
        """
 
-       order_id = self.databasemanager.execute_insert(query)
+       order_id = self.databasemanager.execute_insert(query,(self.user_id,total_amount))
 
        for item in cart_items:
 
-          query = f"""
+          query = """
           INSERT INTO order_items(order_id, product_id, quantity, price)
           VALUES(
-             {order_id},
-             {item['product_id']},
-             {item['quantity']},
-             {item['price']}
+            %s,%s,%s,%s
           )
           """
+          
+          self.databasemanager.execute_query(query,(order_id,item['product_id'],item['quantity'],item['price']))
 
-          self.databasemanager.execute_query(query)
-
-          query = f"""
+          query = """
           UPDATE products
-          SET stock = stock - {item['quantity']}
-          WHERE id = {item['product_id']}
+          SET stock = stock -%s
+          WHERE id = %s
           """
 
-          self.databasemanager.execute_query(query)
+          self.databasemanager.execute_query(query,(item['quantity'],item['product_id']))
 
-       query = f"""
+       query = """
        DELETE FROM cart
-       WHERE user_id = {self.user_id}
+       WHERE user_id = %s
        """
 
-       self.databasemanager.execute_query(query)
-
+       self.databasemanager.execute_query(query,(self.user_id,))
+       self.databasemanager.commit()
        return f"Order Placed Successfully! Total = ₹{total_amount}"
+      except Exception as e:
+
+       self.databasemanager.rollback()
+
+       return f"Checkout Failed: {e}"

@@ -8,8 +8,8 @@ class ProductManager:
         return self.databasemanager.execute_query(query)
 
     def get_product(self, product_id):
-        query = f"SELECT * FROM products WHERE id={product_id}"
-        products = self.databasemanager.execute_query(query)
+        query = "SELECT * FROM products WHERE id=%s"
+        products = self.databasemanager.execute_query(query,(product_id,))
 
         if products:
             return products[0]
@@ -19,17 +19,17 @@ class ProductManager:
         return self.get_product(product_id) is not None
 
     def search_product(self, name):
-        query = f"SELECT * FROM products WHERE name='{name}'"
-        return self.databasemanager.execute_query(query)
+        query = "SELECT * FROM products WHERE name=%s"
+        return self.databasemanager.execute_query(query,(name,))
 
     def add_product(self, name, price, stock, category):
 
-        query = f"""
+        query = """
         INSERT INTO products(name, price, stock, category)
-        VALUES('{name}', {price}, {stock}, '{category}')
+        VALUES(%s,%s,%s,%s)
         """
 
-        self.databasemanager.execute_query(query)
+        self.databasemanager.execute_query(query,(name,price,stock,category))
 
         return "Product Added Successfully"
 
@@ -43,11 +43,11 @@ class ProductManager:
 
         query = f"""
         UPDATE products
-        SET {field}={value}
-        WHERE id={product_id}
+        SET {field}=%s
+        WHERE id=%s
         """
 
-        self.databasemanager.execute_query(query)
+        self.databasemanager.execute_query(query,(product_id,value))
 
         return "Product Updated Successfully"
 
@@ -56,8 +56,8 @@ class ProductManager:
         if not self.is_valid_product(product_id):
             return "Product Not Found"
 
-        query = f"DELETE FROM products WHERE id={product_id}"
+        query = "DELETE FROM products WHERE id=%s"
 
-        self.databasemanager.execute_query(query)
+        self.databasemanager.execute_query(query,(product_id,))
 
         return "Product Deleted Successfully"

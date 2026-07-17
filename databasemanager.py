@@ -12,19 +12,35 @@ class DatabaseManager:
         )
 
         self.cursor = self.connection.cursor(dictionary=True)
+    def execute_query(self, query, params=None):
 
-    def execute_query(self, query):
+       if params is None:
+         self.cursor.execute(query)
+       else:
+         self.cursor.execute(query, params)
+
+       if query.strip().upper().startswith("SELECT"):
+         return self.cursor.fetchall()
+
+       self.connection.commit()
+       return True
+    def execute_insert(self, query, params=None):
+
+       if params is None:
         self.cursor.execute(query)
-
-        if query.strip().upper().startswith("SELECT"):
-            return self.cursor.fetchall()
-
-        self.connection.commit()
-        return True
-    def execute_insert(self, query):
-       self.cursor.execute(query)
+       else:
+        self.cursor.execute(query, params)
+ 
        self.connection.commit()
        return self.cursor.lastrowid
+    def begin_transaction(self):
+       self.connection.start_transaction()
+
+    def commit(self):
+       self.connection.commit()
+
+    def rollback(self):
+       self.connection.rollback()
 
     def close(self):
         self.cursor.close()
