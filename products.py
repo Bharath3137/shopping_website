@@ -1,51 +1,63 @@
-
 class ProductManager:
-    def __init__(self,filemanager):
-        self.filemanager=filemanager
-        self.products = self.filemanager.load_json("products.json")
 
-    def view_products(self):
-      for product_id,product in self.products.items():
-          print(f"ID: {product_id}\nProduct Name: {product['name']}\nPrice: ₹{product['price']}")
+    def __init__(self, databasemanager):
+        self.databasemanager = databasemanager
 
-    def search_products(self,search_name):
-       for product_id,product in self.products.items():
-         if search_name.lower() == product["name"].lower():
-             return product_id,product
-       return None
-    def is_valid_product(self,product_id):
-     return str(product_id) in self.products
-    
-    def get_product(self,product_id):
-      if str(product_id) in self.products:
-         return self.products[str(product_id)]
-      return None
-    def save_products(self):
-      self.filemanager.save_json("products.json",self.products)
-    def add_product(self, name, price):
-       new_product_id = max(map(int, self.products.keys()), default=0) + 1
-       self.products[str(new_product_id)]={
-          "name":name,
-          "price":price
-       }
-       self.save_products()
-    def update_product(self,product_id,name,price):
-       if not self.is_valid_product(product_id):
-          return "product id not exist"
-       product=self.get_product(product_id)
-       product["name"]=name
-       product["price"]=price
-       self.save_products()
-       return "updated product"
-    def delete_product(self,product_id):
-       if not self.is_valid_product(product_id):
-          return "product id not exist"
-       
-       del self.products[str(product_id)]
-       self.save_products()
-       return "product deleted "
-       
-       
+    def get_all_products(self):
+        query = "SELECT * FROM products"
+        return self.databasemanager.execute_query(query)
 
-          
+    def get_product(self, product_id):
+        query = f"SELECT * FROM products WHERE id={product_id}"
+        products = self.databasemanager.execute_query(query)
 
+        if products:
+            return products[0]
+        return None
+
+    def is_valid_product(self, product_id):
+        return self.get_product(product_id) is not None
+
+    def search_product(self, name):
+        query = f"SELECT * FROM products WHERE name='{name}'"
+        return self.databasemanager.execute_query(query)
+
+    def add_product(self, name, price, stock, category):
+
+        query = f"""
+        INSERT INTO products(name, price, stock, category)
+        VALUES('{name}', {price}, {stock}, '{category}')
+        """
+
+        self.databasemanager.execute_query(query)
+
+        return "Product Added Successfully"
+
+    def update_product(self, product_id, field, value):
+
+        if not self.is_valid_product(product_id):
+            return "Product Not Found"
+
+        if isinstance(value, str):
+            value = f"'{value}'"
+
+        query = f"""
+        UPDATE products
+        SET {field}={value}
+        WHERE id={product_id}
+        """
+
+        self.databasemanager.execute_query(query)
+
+        return "Product Updated Successfully"
+
+    def delete_product(self, product_id):
+
+        if not self.is_valid_product(product_id):
+            return "Product Not Found"
+
+        query = f"DELETE FROM products WHERE id={product_id}"
+
+        self.databasemanager.execute_query(query)
+
+        return "Product Deleted Successfully"
