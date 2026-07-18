@@ -1,11 +1,18 @@
 class CartManager:
 
-    def __init__(self, productmanager, databasemanager):
+    def __init__(self, productmanager, databasemanager,usermanager):
         self.productmanager = productmanager
         self.databasemanager = databasemanager
-        self.user_id = 1
+        self.usermanager=usermanager
+        
 
     def add_to_cart(self, product_id):
+        user = self.usermanager.get_current_user()
+
+        if user is None:
+           return "Please login first."
+
+        user_id = user["id"]
 
         if not self.productmanager.is_valid_product(product_id):
             return "Invalid Product ID"
@@ -16,7 +23,7 @@ class CartManager:
         AND product_id=%s
         """
 
-        cart_item = self.databasemanager.execute_query(query,(self.user_id,product_id))
+        cart_item = self.databasemanager.execute_query(query,(user_id,product_id))
 
         if cart_item:
 
@@ -28,7 +35,7 @@ class CartManager:
             WHERE user_id=%s
             AND product_id=%s
             """
-            self.databasemanager.execute_query(query,(quantity,self.user_id,product_id))
+            self.databasemanager.execute_query(query,(quantity,user_id,product_id))
 
         else:
 
@@ -37,12 +44,17 @@ class CartManager:
             VALUES(%s,%s,%s)
             """
 
-            self.databasemanager.execute_query(query,(self.user_id,product_id,1))
+            self.databasemanager.execute_query(query,(user_id,product_id,1))
 
         return "Product Added Successfully"
 
     def view_cart(self):
+        user = self.usermanager.get_current_user()
 
+        if user is None:
+            return "Please login first."
+
+        user_id = user["id"]
         query = """
         SELECT
             products.name,
@@ -54,7 +66,7 @@ class CartManager:
         WHERE cart.user_id=%s
         """
 
-        items = self.databasemanager.execute_query(query,(self.user_id,))
+        items = self.databasemanager.execute_query(query,(user_id,))
 
         if not items:
             print("Cart is Empty")
@@ -76,6 +88,12 @@ class CartManager:
         print(f"\nTotal = ₹{total}")
 
     def remove_item_from_cart(self, product_id):
+        user = self.usermanager.get_current_user()
+
+        if user is None:
+           return "Please login first."
+
+        user_id = user["id"]
 
         query = """
         SELECT * FROM cart
@@ -83,7 +101,7 @@ class CartManager:
         AND product_id=%s
         """
 
-        item = self.databasemanager.execute_query(query,(self.user_id,product_id))
+        item = self.databasemanager.execute_query(query,(user_id,product_id))
 
         if not item:
             return "Product Not Found In Cart"
@@ -98,7 +116,7 @@ class CartManager:
             WHERE user_id=%s
             AND product_id=%s
             """
-            self.databasemanager.execute_query(query,(quantity-1,self.user_id,product_id))
+            self.databasemanager.execute_query(query,(quantity-1,user_id,product_id))
         else:
 
             query = """
@@ -107,11 +125,17 @@ class CartManager:
             AND product_id=%s
             """
 
-        self.databasemanager.execute_query(query,(self.user_id,product_id))
+        self.databasemanager.execute_query(query,(user_id,product_id))
 
         return "Removed Successfully"
 
     def checkout(self):
+      user = self.usermanager.get_current_user()
+
+      if user is None:
+           return "Please login first."
+
+      user_id = user["id"]
       try:
 
        self.databasemanager.begin_transaction()
@@ -128,7 +152,7 @@ class CartManager:
        WHERE cart.user_id = %s
        """
 
-       cart_items = self.databasemanager.execute_query(query,(self.user_id,))
+       cart_items = self.databasemanager.execute_query(query,(user_id,))
 
        if not cart_items:
           return "Cart is Empty"
@@ -147,7 +171,7 @@ class CartManager:
        VALUES(%s, %s)
        """
 
-       order_id = self.databasemanager.execute_insert(query,(self.user_id,total_amount))
+       order_id = self.databasemanager.execute_insert(query,(user_id,total_amount))
 
        for item in cart_items:
 
@@ -173,7 +197,7 @@ class CartManager:
        WHERE user_id = %s
        """
 
-       self.databasemanager.execute_query(query,(self.user_id,))
+       self.databasemanager.execute_query(query,(user_id,))
        self.databasemanager.commit()
        return f"Order Placed Successfully! Total = ₹{total_amount}"
       except Exception as e:
