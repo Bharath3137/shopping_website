@@ -2,8 +2,10 @@ from databasemanager import DatabaseManager
 from products import ProductManager
 from cart import CartManager
 from user import UserManager
+from dashboardmanager import DashboardManager
 
 databasemanager = DatabaseManager()
+dashboardmanager = DashboardManager(databasemanager)
 productmanager = ProductManager(databasemanager)
 usermanager = UserManager(databasemanager)
 cartmanager = CartManager(productmanager, databasemanager, usermanager)
@@ -20,7 +22,8 @@ def customer_menu():
         print("4. View Cart")
         print("5. Remove Item From Cart")
         print("6. Checkout")
-        print("7. Logout")
+        print("7. view orders")
+        print("8.Logout")
 
         customer_choice = int(input("Enter your choice: "))
 
@@ -83,6 +86,9 @@ def customer_menu():
             print(cartmanager.checkout())
 
         elif customer_choice == 7:
+            cartmanager.view_order_history()
+
+        elif customer_choice == 8:
 
             print(usermanager.logout())
             break
@@ -101,7 +107,8 @@ def admin_menu():
         print("2. Add Product")
         print("3. Update Product")
         print("4. Delete Product")
-        print("5. Logout")
+        print("5. Dashboard")
+        print("6. Logout")
 
         admin_choice = int(input("Enter your choice: "))
 
@@ -164,6 +171,21 @@ def admin_menu():
 
             product_id = int(input("Enter Product ID: "))
             print(productmanager.delete_product(product_id))
+        elif admin_choice == 5:
+
+            dashboard = dashboardmanager.get_dashboard()
+
+            print("\n========== ADMIN DASHBOARD ==========")
+            print(f"Total Users    : {dashboard['total_users']}")
+            print(f"Total Products : {dashboard['total_products']}")
+            print(f"Total Orders   : {dashboard['total_orders']}")
+            print(f"Total Revenue  : ₹{dashboard['total_revenue']}")
+            print("\nTop Selling Products")
+            print("------------------------------")
+
+            for product in dashboard["top_products"]:
+
+                print(f"{product['name']} - {product['sold']} Sold")
 
         elif admin_choice == 5:
 

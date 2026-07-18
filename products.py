@@ -9,7 +9,7 @@ class ProductManager:
 
     def get_product(self, product_id):
         query = "SELECT * FROM products WHERE id=%s"
-        products = self.databasemanager.execute_query(query,(product_id,))
+        products = self.databasemanager.execute_query(query, (product_id,))
 
         if products:
             return products[0]
@@ -20,7 +20,7 @@ class ProductManager:
 
     def search_product(self, name):
         query = "SELECT * FROM products WHERE name=%s"
-        return self.databasemanager.execute_query(query,(name,))
+        return self.databasemanager.execute_query(query, (name,))
 
     def add_product(self, name, price, stock, category):
 
@@ -29,7 +29,7 @@ class ProductManager:
         VALUES(%s,%s,%s,%s)
         """
 
-        self.databasemanager.execute_query(query,(name,price,stock,category))
+        self.databasemanager.execute_query(query, (name, price, stock, category))
 
         return "Product Added Successfully"
 
@@ -47,7 +47,7 @@ class ProductManager:
         WHERE id=%s
         """
 
-        self.databasemanager.execute_query(query,(product_id,value))
+        self.databasemanager.execute_query(query, (product_id, value))
 
         return "Product Updated Successfully"
 
@@ -58,6 +58,6 @@ class ProductManager:
 
         query = "DELETE FROM products WHERE id=%s"
 
-        self.databasemanager.execute_query(query,(product_id,))
+        self.databasemanager.execute_query(query, (product_id,))
 
         return "Product Deleted Successfully"
