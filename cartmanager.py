@@ -1,3 +1,6 @@
+from logger import logger
+
+
 class CartManager:
 
     def __init__(self, productmanager, databasemanager, usermanager):
@@ -203,11 +206,14 @@ class CartManager:
 
             self.databasemanager.execute_query(query, (user_id,))
             self.databasemanager.commit()
+            logger.info(
+                f"Order {order_id} placed by User {user_id} " f"Amount ₹{total_amount}"
+            )
             return f"Order Placed Successfully! Total = ₹{total_amount}"
         except Exception as e:
 
             self.databasemanager.rollback()
-
+            logger.error(f"Checkout Failed: {e}")
             return f"Checkout Failed: {e}"
 
     def view_order_history(self):

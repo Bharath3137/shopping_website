@@ -1,8 +1,9 @@
 from databasemanager import DatabaseManager
-from products import ProductManager
-from cart import CartManager
+from productmanager import ProductManager
+from cartmanager import CartManager
 from user import UserManager
 from dashboardmanager import DashboardManager
+from utils import get_int, get_float, display_products
 
 databasemanager = DatabaseManager()
 dashboardmanager = DashboardManager(databasemanager)
@@ -25,26 +26,13 @@ def customer_menu():
         print("7. view orders")
         print("8.Logout")
 
-        customer_choice = int(input("Enter your choice: "))
+        customer_choice = get_int("Enter your choice: ")
 
         if customer_choice == 1:
 
             products = productmanager.get_all_products()
 
-            if not products:
-                print("No Products Available")
-
-            else:
-
-                for product in products:
-
-                    print("---------------------------")
-                    print(f"ID       : {product['id']}")
-                    print(f"Name     : {product['name']}")
-                    print(f"Price    : ₹{product['price']}")
-                    print(f"Stock    : {product['stock']}")
-                    print(f"Category : {product['category']}")
-                    print("---------------------------")
+            display_products(products)
 
         elif customer_choice == 2:
 
@@ -52,24 +40,11 @@ def customer_menu():
 
             products = productmanager.search_product(name)
 
-            if not products:
-                print("Product Not Found")
-
-            else:
-
-                for product in products:
-
-                    print("---------------------------")
-                    print(f"ID       : {product['id']}")
-                    print(f"Name     : {product['name']}")
-                    print(f"Price    : ₹{product['price']}")
-                    print(f"Stock    : {product['stock']}")
-                    print(f"Category : {product['category']}")
-                    print("---------------------------")
+            display_products(products)
 
         elif customer_choice == 3:
 
-            product_id = int(input("Enter Product ID: "))
+            product_id = get_int("Enter Product ID: ")
             print(cartmanager.add_to_cart(product_id))
 
         elif customer_choice == 4:
@@ -78,7 +53,7 @@ def customer_menu():
 
         elif customer_choice == 5:
 
-            product_id = int(input("Enter Product ID: "))
+            product_id = get_int("Enter Product ID: ")
             print(cartmanager.remove_item_from_cart(product_id))
 
         elif customer_choice == 6:
@@ -110,46 +85,32 @@ def admin_menu():
         print("5. Dashboard")
         print("6. Logout")
 
-        admin_choice = int(input("Enter your choice: "))
+        admin_choice = get_int("Enter your choice: ")
 
         if admin_choice == 1:
 
             products = productmanager.get_all_products()
 
-            if not products:
-                print("No Products Available")
-
-            else:
-
-                for product in products:
-
-                    print("---------------------------")
-                    print(f"ID       : {product['id']}")
-                    print(f"Name     : {product['name']}")
-                    print(f"Price    : ₹{product['price']}")
-                    print(f"Stock    : {product['stock']}")
-                    print(f"Category : {product['category']}")
-                    print("---------------------------")
-
+            display_products(products)
         elif admin_choice == 2:
 
             name = input("Enter Product Name: ")
-            price = float(input("Enter Product Price: "))
-            stock = int(input("Enter Product Stock: "))
+            price = get_float("Enter Product Price: ")
+            stock = get_int("Enter Product Stock: ")
             category = input("Enter Product Category: ")
 
             print(productmanager.add_product(name, price, stock, category))
 
         elif admin_choice == 3:
 
-            product_id = int(input("Enter Product ID: "))
+            product_id = get_int("Enter Product ID: ")
 
             print("\n1. Name")
             print("2. Price")
             print("3. Stock")
             print("4. Category")
 
-            choice = int(input("Choose Field: "))
+            choice = get_int("Choose Field: ")
 
             fields = {1: "name", 2: "price", 3: "stock", 4: "category"}
 
@@ -169,7 +130,7 @@ def admin_menu():
                 print(productmanager.update_product(product_id, fields[choice], value))
         elif admin_choice == 4:
 
-            product_id = int(input("Enter Product ID: "))
+            product_id = get_int("Enter Product ID: ")
             print(productmanager.delete_product(product_id))
         elif admin_choice == 5:
 
@@ -187,7 +148,7 @@ def admin_menu():
 
                 print(f"{product['name']} - {product['sold']} Sold")
 
-        elif admin_choice == 5:
+        elif admin_choice == 6:
 
             print(usermanager.logout())
             break
@@ -204,7 +165,7 @@ while True:
     print("2. Login")
     print("3. Exit")
 
-    choice = int(input("Enter your choice: "))
+    choice = get_int("Enter your choice: ")
 
     if choice == 1:
 
@@ -235,12 +196,12 @@ while True:
 
                 customer_menu()
 
-        elif choice == 3:
+    elif choice == 3:
 
-            databasemanager.close()
-            print("Thank You!")
-            break
+        databasemanager.close()
+        print("Thank You!")
+        break
 
-        else:
+    else:
 
-            print("Invalid Choice")
+        print("Invalid Choice")

@@ -1,5 +1,6 @@
 import re
 import bcrypt
+from logger import logger
 
 
 class UserManager:
@@ -39,6 +40,7 @@ class UserManager:
         self.databasemanager.execute_query(
             query, (username, email, hashed_password, "Customer")
         )
+
         return "Registration Successful"
 
     def login_user(self, email, password):
@@ -51,7 +53,7 @@ class UserManager:
         user = user[0]
         if not bcrypt.checkpw(password.encode(), user["password"].encode()):
             return "Invalid Email or Password"
-
+        logger.info(f"{user['username']} logged in")
         self.current_user = user
 
         return "Login Successful"
@@ -63,6 +65,8 @@ class UserManager:
 
         if self.current_user is None:
             return "No User is Logged In"
+
+        logger.info(f"{self.current_user['username']} logged out")
 
         self.current_user = None
 

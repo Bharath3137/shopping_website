@@ -7,7 +7,6 @@ class DashboardManager:
 
         dashboard = {}
 
-        # Total Users
         query = """
         SELECT COUNT(*) AS total_users
         FROM users
@@ -15,7 +14,6 @@ class DashboardManager:
         result = self.databasemanager.execute_query(query)
         dashboard["total_users"] = result[0]["total_users"]
 
-        # Total Products
         query = """
         SELECT COUNT(*) AS total_products
         FROM products
@@ -23,7 +21,6 @@ class DashboardManager:
         result = self.databasemanager.execute_query(query)
         dashboard["total_products"] = result[0]["total_products"]
 
-        # Total Orders
         query = """
         SELECT COUNT(*) AS total_orders
         FROM orders
@@ -31,7 +28,6 @@ class DashboardManager:
         result = self.databasemanager.execute_query(query)
         dashboard["total_orders"] = result[0]["total_orders"]
 
-        # Total Revenue
         query = """
         SELECT SUM(total_amount) AS total_revenue
         FROM orders
@@ -42,7 +38,6 @@ class DashboardManager:
             result[0]["total_revenue"] if result[0]["total_revenue"] is not None else 0
         )
 
-        # Top Selling Products
         query = """
         SELECT products.name,SUM(order_items.quantity) AS sold FROM order_items
         JOIN products
